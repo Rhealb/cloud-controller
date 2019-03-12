@@ -10,28 +10,43 @@
 
 1）kube-apiserver：
 
+```
 --cloud-provider=external
+```
 
 2）kube-controller-manager
 
+```
 --cloud-provider=external
+```
 
 3）kube-proxy
 
+```
 --cloud-provider=external
+```
 
 4）kubelet
 
+```
 --cloud-provider=external --hostname-override=cn-shanghai.i-uf63wpxafsmdnyaihkjq --provider-id=cn-shanghai.i-uf63wpxafsmdnyaihkjq 
+```
+
+
 
 其中机器号是通过以下命令获取的
 
+```
 $ echo `curl -s http://100.100.100.200/latest/meta-data/region-id`.`curl -s <http://100.100.100.200/latest/meta-data/instance-id`>
+```
+
+
 
 ## 使用
 
 1，创建一个loadbalance(nginx-svc.yml):
 
+```
 apiVersion: v1
 
 kind: Service
@@ -48,17 +63,20 @@ spec:
 
   \- port: 29007
 
-​    nodePort: 29007
+    nodePort: 29007
 
-​    protocol: TCP
+    protocol: TCP
 
-​    targetPort: 80
+    targetPort: 80
 
   selector:
 
-​    run: nginx
+    run: nginx
 
   type: LoadBalancer
+
+
+```
 
 创建以上service，就会创建一个名为ali-slb（默认外网slb名字）的loadbalance，若ali-slb已存在，就会在slb中添加对应的监听端口29007。
 
@@ -72,6 +90,7 @@ nginx        LoadBalancer   10.254.235.239   139.224.166.231  29007:29007/TCP   
 
 再创建一个svc，加入同样的loadbalance（ali-slb）：
 
+```
 apiVersion: v1
 
 kind: Service
@@ -88,17 +107,18 @@ spec:
 
   \- port: 29008
 
-​    nodePort: 29008
+    nodePort: 29008
 
-​    protocol: TCP
+    protocol: TCP
 
-​    targetPort: 80
+    targetPort: 80
 
   selector:
 
-​    run: nginx
+    run: nginx
 
   type: LoadBalancer
+```
 
 \# kubectl get svc 
 
@@ -112,6 +132,7 @@ nginx-2      LoadBalancer   10.254.86.56     139.224.166.231   29008:29008/TCP  
 
 2, 创建一个仅限内网使用的loadbalance：
 
+```
 apiVersion: v1
 
 kind: Service
@@ -120,7 +141,7 @@ metadata:
 
   annotations:
 
-​    service.beta.kubernetes.io/alicloud-loadbalancer-address-type: "intranet"
+    service.beta.kubernetes.io/alicloud-loadbalancer-address-type: "intranet"
 
   name: nginx-intranet
 
@@ -132,17 +153,18 @@ spec:
 
   \- port: 29009
 
-​    nodePort: 29009
+    nodePort: 29009
 
-​    protocol: TCP
+    protocol: TCP
 
-​    targetPort: 80
+    targetPort: 80
 
   selector:
 
-​    run: nginx
+    run: nginx
 
   type: LoadBalancer
+```
 
 创建一个名为ali-slb-internal（默认内网slb名字）的loadbalance，若ali-slb-internal已存在，就会在slb中添加对应的监听端口29009。
 
@@ -158,6 +180,7 @@ nginx-intranet   LoadBalancer   10.254.29.45     172.16.1.205      29009:29009/T
 
 再创建一个svc，加入同样的loadbalance（ali-slb-internal）：
 
+```
 apiVersion: v1
 
 kind: Service
@@ -166,7 +189,7 @@ metadata:
 
   annotations:
 
-​    service.beta.kubernetes.io/alicloud-loadbalancer-address-type: "intranet"
+    service.beta.kubernetes.io/alicloud-loadbalancer-address-type: "intranet"
 
   name: nginx-intranet-2
 
@@ -180,15 +203,16 @@ spec:
 
 nodePort: 29010
 
-​    protocol: TCP
+    protocol: TCP
 
-​    targetPort: 80
+    targetPort: 80
 
   selector:
 
-​    run: nginx
+    run: nginx
 
   type: LoadBalancer
+```
 
 \# kubectl get svc
 
@@ -206,6 +230,7 @@ nginx-intranet-2   LoadBalancer   10.254.211.36    172.16.1.205      29010:29010
 
 3，不在默认的slb ali-slb loadbalance上添加svc，自定义slb
 
+```
 apiVersion: v1
 
 kind: Service
@@ -214,7 +239,7 @@ metadata:
 
   annotations:
 
-​    enndata.io/ali-load-balancer-name: "test-slb"
+    enndata.io/ali-load-balancer-name: "test-slb"
 
   name: nginx-test
 
@@ -228,15 +253,16 @@ spec:
 
 nodePort: 29011
 
-​    protocol: TCP
+    protocol: TCP
 
 targetPort: 80
 
   selector:
 
-​    run: nginx
+    run: nginx
 
   type: LoadBalancer
+```
 
  
 
@@ -264,7 +290,9 @@ nginx-test   LoadBalancer   10.254.156.110   47.102.62.60      29011:29011/TCP  
 
 在annotations中添加参数：
 
+```
  service.beta.kubernetes.io/alicloud-loadbalancer-spec: "slb.s1.small"
+```
 
  
 
