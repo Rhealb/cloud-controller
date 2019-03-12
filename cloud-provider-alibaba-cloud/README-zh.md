@@ -32,19 +32,15 @@
 --cloud-provider=external --hostname-override=cn-shanghai.i-uf63wpxafsmdnyaihkjq --provider-id=cn-shanghai.i-uf63wpxafsmdnyaihkjq 
 ```
 
-
-
 其中机器号是通过以下命令获取的
 
 ```
 $ echo `curl -s http://100.100.100.200/latest/meta-data/region-id`.`curl -s <http://100.100.100.200/latest/meta-data/instance-id`>
 ```
 
-
-
 ## 使用
 
-1，创建一个loadbalance(nginx-svc.yml):
+### 1，创建公网loadbalance
 
 ```
 apiVersion: v1
@@ -80,13 +76,13 @@ spec:
 
 创建以上service，就会创建一个名为ali-slb（默认外网slb名字）的loadbalance，若ali-slb已存在，就会在slb中添加对应的监听端口29007。
 
-\# kubectl get svc 
+```
+# kubectl get svc 
 
 NAME         TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)           AGE
 
 nginx        LoadBalancer   10.254.235.239   139.224.166.231  29007:29007/TCP   6s
-
- 
+```
 
 再创建一个svc，加入同样的loadbalance（ali-slb）：
 
@@ -120,17 +116,17 @@ spec:
   type: LoadBalancer
 ```
 
-\# kubectl get svc 
+```
+# kubectl get svc 
 
 NAME         TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)           AGE
 
 nginx        LoadBalancer   10.254.235.239   139.224.166.231   29007:29007/TCP   1m
 
 nginx-2      LoadBalancer   10.254.86.56     139.224.166.231   29008:29008/TCP   5s
+```
 
- 
-
-2, 创建一个仅限内网使用的loadbalance：
+### 2, 创建内网loadbalance
 
 ```
 apiVersion: v1
@@ -168,7 +164,8 @@ spec:
 
 创建一个名为ali-slb-internal（默认内网slb名字）的loadbalance，若ali-slb-internal已存在，就会在slb中添加对应的监听端口29009。
 
-\# kubectl get svc 
+```
+# kubectl get svc 
 
 NAME             TYPE           CLUSTER-IP       EXTERNAL-IP    PORT(S)           AGE
 
@@ -177,6 +174,7 @@ nginx            LoadBalancer   10.254.235.239   139.224.166.231   29007:29007/T
 nginx-2          LoadBalancer   10.254.86.56     139.224.166.231   29008:29008/TCP   2m
 
 nginx-intranet   LoadBalancer   10.254.29.45     172.16.1.205      29009:29009/TCP   20s
+```
 
 再创建一个svc，加入同样的loadbalance（ali-slb-internal）：
 
@@ -214,7 +212,8 @@ nodePort: 29010
   type: LoadBalancer
 ```
 
-\# kubectl get svc
+```
+# kubectl get svc
 
 NAME               TYPE           CLUSTER-IP       EXTERNAL-IP       PORT(S)           AGE
 
@@ -225,10 +224,11 @@ nginx-2            LoadBalancer   10.254.86.56     139.224.166.231   29008:29008
 nginx-intranet     LoadBalancer   10.254.29.45     172.16.1.205      29009:29009/TCP   2m
 
 nginx-intranet-2   LoadBalancer   10.254.211.36    172.16.1.205      29010:29010/TCP   2s
+```
 
+### 3，自定义slb
 
-
-3，不在默认的slb ali-slb loadbalance上添加svc，自定义slb
+即不在默认的slb ali-slb loadbalance上添加svc，自定义创建slb
 
 ```
 apiVersion: v1
@@ -261,14 +261,13 @@ targetPort: 80
 
     run: nginx
 
-  type: LoadBalancer
+  type: LoadBalancer 
 ```
-
- 
 
 会创建一个新的slb，test-slb，如果test-slb已存在，就会在test-slb中添加监听端口，同用法1.
 
-\# kubectl get svc
+```
+# kubectl get svc
 
 NAME         TYPE           CLUSTER-IP       EXTERNAL-IP       PORT(S)           AGE
 
@@ -281,20 +280,17 @@ nginx-intranet     LoadBalancer   10.254.29.45     172.16.1.205      29009:29009
 nginx-intranet-2   LoadBalancer   10.254.211.36    172.16.1.205      29010:29010/TCP   4m
 
 nginx-test   LoadBalancer   10.254.156.110   47.102.62.60      29011:29011/TCP   16s
+```
 
 所有的slb，除了ali-slb，若listeners为0就会被删除。
 
-
-
-4，创建一个指定规格的loadbalance
+### 4，指定规格loadbalance
 
 在annotations中添加参数：
 
 ```
  service.beta.kubernetes.io/alicloud-loadbalancer-spec: "slb.s1.small"
 ```
-
- 
 
 以下内容引用自https://help.aliyun.com/document_detail/27657.html?spm=5176.8009612.101.7.4fe171b3tmliZC
 
